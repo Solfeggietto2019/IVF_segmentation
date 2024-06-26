@@ -20,13 +20,9 @@ def main() -> None:
     model_path = 'models/best.pt'  # Actualiza con la ruta real de tu modelo YOLO
     yolo = YOLOModel(model_path)
 
-    frame_count = 0
-
     for video_data in video_reader:
         frame, width, height, fps, num_frame = video_data
         num_frame -= 1
-        print("**************** FRAME", {num_frame})
-        frame_count += 1
         # Ejecutar inferencia de YOLO en el frame
         results = yolo.infer(frame)
         # Iterar sobre los objetos Sperm en el frame actual
