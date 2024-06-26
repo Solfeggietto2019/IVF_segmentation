@@ -7,25 +7,21 @@ from utils.utils import draw_positions, adjust_coordinates
 from utils.dataclasses import SelectedSperm
 
 def main() -> None:
-
-    selected_sperm = SelectedSperm
-    # Leer el archivo JSON
     json_file_path = 'data/json/48115_Nadiya_0402221432.json'
-    reader = JSONReader(json_file_path)
-    sperms_data = reader.extract_sperms_data()
-
-    # Leer el archivo de video MP4 frame por frame y mostrar los resultados de YOLO
     video_file_path = 'data/video/48115_Nadiya_0402221432.avi'
+    model_path = 'models/best.pt'
+    
+    selected_sperm = SelectedSperm
+    reader = JSONReader(json_file_path)
     video_reader = VideoStreamReader(video_file_path)
-    model_path = 'models/best.pt'  # Actualiza con la ruta real de tu modelo YOLO
     yolo = YOLOModel(model_path)
-
+    
+    sperms_data = reader.extract_sperms_data()
+    
     for video_data in video_reader:
         frame, width, height, fps, num_frame = video_data
         num_frame -= 1
-        # Ejecutar inferencia de YOLO en el frame
         results = yolo.infer(frame)
-        # Iterar sobre los objetos Sperm en el frame actual
         for sequence_id, sperm_list in sperms_data.items():
             for sperm in sperm_list:
                 if sperm.initial_frame <= num_frame <= sperm.final_frame:
@@ -38,12 +34,9 @@ def main() -> None:
                     
                     frame = draw_positions(frame, (x_adjusted, y_adjusted), sperm.id)
             
-        # Procesar y mostrar los resultados de la inferencia
         annotated_frame = process_inference_results(selected_sperm, sperms_data, num_frame, results, frame, width, height)
-
-        # Mostrar el frame anotado
         cv2.imshow('YOLOv8 Tracking', annotated_frame)
-        # Esperar por la tecla 'q' para salir
+        
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
