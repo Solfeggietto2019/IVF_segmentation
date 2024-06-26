@@ -49,7 +49,6 @@ def main() -> None:
 
     video_reader.release()
     cv2.destroyAllWindows()
-    print(f"Total number of frames processed: {frame_count}")
 
 if __name__ == "__main__":
     main()
