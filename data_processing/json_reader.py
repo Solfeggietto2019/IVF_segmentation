@@ -28,7 +28,37 @@ class JSONReader:
             print("No data loaded")
             return None
 
-        # Crear objetos Sequence y Sperm a partir de los datos
+        sperms_data = defaultdict(list)
+        
+        for idx, sperm_data in self.data.get('sperms', {}).items():
+            positions = [(pos["frame"], pos["_position"]["x"], pos["_position"]["y"]) for pos in sperm_data["_positions"]]
+            initial_frame = positions[0][0] if positions else None
+            final_frame = positions[-1][0] if positions else None
+
+            sperm = Sperm(
+                id=sperm_data["_id"],
+                initial_frame=initial_frame,
+                final_frame=final_frame,
+                positions=positions,
+                deleted=sperm_data["deleted"],
+                SiDScore=sperm_data["_SiDScore"],
+                confidence=sperm_data["_confidence"],
+                mean_brightness=sperm_data["_meanBrightness"],
+                motility_parameters=sperm_data["_MotilityParameters"],
+                standard_motility_parameters=sperm_data["_StandardMotilityParameters"]
+            )
+            sperms_data[idx].append(sperm)
+        
+        return sperms_data
+    
+    def extract_sperms_data_v2(self) -> Union[Dict[str, List[Sperm]], None]:
+        """
+        Extract relevant data from the 'sperms' key in the JSON.
+        """
+        if not self.data:
+            print("No data loaded")
+            return None
+        
         analyzed_sequences = self.data["AnalyzedSequencesInVideo"]
         sequence_objects = [
         Sequence(
@@ -73,7 +103,7 @@ class JSONReader:
             )
         return sperms_data
 
-    def extract_sperms_data_v2(self) -> Union[List[Dict[str, Any]], None]:
+    def extract_sperms_data_v3(self) -> Union[List[Dict[str, Any]], None]:
         """
         Extract relevant data from the 'sperms' key in the JSON.
         """

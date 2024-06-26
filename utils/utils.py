@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from typing import List, Tuple, Any
+from typing import List, Tuple, Any, Dict
 import math
 from utils.dataclasses import Sperm, SelectedSperm
 
@@ -95,19 +95,21 @@ def calculate_distance(point1: Tuple[float, float], point2: Tuple[float, float])
     distance = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
     return distance
 
-def find_nearest_object(sperm_bbox_center_point, sperms_data, current_frame) -> Sperm:
+def find_nearest_object(sperm_bbox_center_point: Tuple[float, float], sperms_data: Dict[str, List[Sperm]], current_frame: int) -> Sperm:
     min_distance = float('inf')
     nearest_object = None
     
-    for sequence_id, sperm_list in sperms_data.items():
+    for sperm_list in sperms_data.values():
         for sperm in sperm_list:
             if sperm.initial_frame <= (current_frame - 1) <= sperm.final_frame:
-                frame_coords = sperm.positions[(current_frame - 1) - sperm.initial_frame]
-                position = frame_coords["posX"], frame_coords["posY"]
-                distance = calculate_distance(sperm_bbox_center_point, position)
-                if distance < min_distance and distance < 10:
-                    min_distance = distance
-                    nearest_object = sperm
+                position_idx = (current_frame - 1) - sperm.initial_frame
+                if 0 <= position_idx < len(sperm.positions):
+                    frame_number, x, y = sperm.positions[position_idx]
+                    position = (x, y)
+                    distance = calculate_distance(sperm_bbox_center_point, position)
+                    if distance < min_distance and distance < 10:
+                        min_distance = distance
+                        nearest_object = sperm
     
     return nearest_object
 

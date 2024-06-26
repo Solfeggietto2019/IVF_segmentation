@@ -61,7 +61,7 @@ def process_inference_results(selected_sperm: SelectedSperm, sperms_data, curren
                     overlaping_sperm = find_nearest_object(sperm_bbox_center_point, sperms_data, current_frame)
                     if overlaping_sperm:
                         selected_sperm.Id = overlaping_sperm.id
-                        selected_sperm.Data = overlaping_sperm.stats
+                        selected_sperm.Data = overlaping_sperm.standard_motility_parameters
                         selected_sperm.mask = mask
                         selected_sperm.bbox = box
                         selected_sperm.frame = current_frame

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import List, Tuple, Dict
 
 @dataclass
 class Sequence:
@@ -17,9 +18,13 @@ class Sperm:
     id: int
     initial_frame: int
     final_frame: int
-    positions: list
-    number_of_positions: list
-    stats: dict
+    positions: List[Tuple[int, float, float]]
+    deleted: bool
+    SiDScore: float
+    confidence: int
+    mean_brightness: List[int]
+    motility_parameters: Dict[str, float]
+    standard_motility_parameters: Dict[str, float]
 
 
 class SelectedSperm:
