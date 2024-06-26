@@ -2,6 +2,7 @@
 import torch
 from ultralytics import YOLO
 
+
 class YOLOModel:
     def __init__(self, model_path: str) -> None:
         """
@@ -23,7 +24,6 @@ class YOLOModel:
         :param frame: The frame on which to run inference.
         :return: The inference results.
         """
-        #results = self.model.track(frame, persist=True, show_boxes=False, show_labels=True)
+        # results = self.model.track(frame, persist=True, show_boxes=False, show_labels=True)
         results = self.model.predict(frame)
         return results
-

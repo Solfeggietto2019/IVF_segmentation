@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Tuple, Dict
 
+
 @dataclass
 class Sequence:
     sequence_ID: int

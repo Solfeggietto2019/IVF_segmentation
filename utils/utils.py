@@ -4,7 +4,10 @@ from typing import List, Tuple, Any, Dict
 import math
 from utils.dataclasses import Sperm, SelectedSperm
 
-def adjust_coordinates(x: int, y: int, frame_shape: tuple, dim: int = 10, scale_width: int = 640) -> tuple:
+
+def adjust_coordinates(
+    x: int, y: int, frame_shape: tuple, dim: int = 10, scale_width: int = 640
+) -> tuple:
     """
     Adjust the coordinates (x, y) based on the frame dimensions and scaling factor.
 
@@ -20,10 +23,10 @@ def adjust_coordinates(x: int, y: int, frame_shape: tuple, dim: int = 10, scale_
     """
     frame_height, frame_width, _ = frame_shape
     scaling_factor = frame_width / scale_width
-    
+
     x = round(x * scaling_factor)
     y = round(y * scaling_factor)
-    
+
     if x + dim > frame_width:
         x = frame_width - dim
     if x - dim < 0:
@@ -32,11 +35,13 @@ def adjust_coordinates(x: int, y: int, frame_shape: tuple, dim: int = 10, scale_
         y = frame_height - dim
     if y - dim < 0:
         y = dim
-    
+
     return x, y
 
 
-def draw_positions(frame: np.ndarray, positions: Tuple[int, int], sperm_id: int) -> np.ndarray:
+def draw_positions(
+    frame: np.ndarray, positions: Tuple[int, int], sperm_id: int
+) -> np.ndarray:
     """
     Draw a red circle and the sperm ID on the frame at the given position.
 
@@ -62,7 +67,10 @@ def draw_positions(frame: np.ndarray, positions: Tuple[int, int], sperm_id: int)
     )
     return frame
 
-def find_bbox_center(x_min: float, y_min: float, x_max: float, y_max: float) -> Tuple[float, float]:
+
+def find_bbox_center(
+    x_min: float, y_min: float, x_max: float, y_max: float
+) -> Tuple[float, float]:
     """
     Calculate the center coordinates of a bounding box.
 
@@ -79,7 +87,10 @@ def find_bbox_center(x_min: float, y_min: float, x_max: float, y_max: float) -> 
     y_center = (y_min + y_max) / 2
     return x_center, y_center
 
-def calculate_distance(point1: Tuple[float, float], point2: Tuple[float, float]) -> float:
+
+def calculate_distance(
+    point1: Tuple[float, float], point2: Tuple[float, float]
+) -> float:
     """
     Calculate the Euclidean distance between two points in a 2D space.
 
@@ -95,10 +106,15 @@ def calculate_distance(point1: Tuple[float, float], point2: Tuple[float, float])
     distance = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
     return distance
 
-def find_nearest_object(sperm_bbox_center_point: Tuple[float, float], sperms_data: Dict[str, List[Sperm]], current_frame: int) -> Sperm:
-    min_distance = float('inf')
+
+def find_nearest_object(
+    sperm_bbox_center_point: Tuple[float, float],
+    sperms_data: Dict[str, List[Sperm]],
+    current_frame: int,
+) -> Sperm:
+    min_distance = float("inf")
     nearest_object = None
-    
+
     for sperm_list in sperms_data.values():
         for sperm in sperm_list:
             if sperm.initial_frame <= (current_frame - 1) <= sperm.final_frame:
@@ -110,13 +126,11 @@ def find_nearest_object(sperm_bbox_center_point: Tuple[float, float], sperms_dat
                     if distance < min_distance and distance < 10:
                         min_distance = distance
                         nearest_object = sperm
-    
+
     return nearest_object
 
 
-def get_morphological_features_from_mask(
-    sperm: SelectedSperm
-) -> None:
+def get_morphological_features_from_mask(sperm: SelectedSperm) -> None:
     """
     Process a video frame to extract and compute various geometric properties of the detected contours.
 
@@ -155,7 +169,7 @@ def get_morphological_features_from_mask(
         perimeter = cv2.arcLength(largest_contour, True)
 
         if perimeter != 0:
-            circularity = 4 * math.pi * area / (perimeter ** 2)
+            circularity = 4 * math.pi * area / (perimeter**2)
         else:
             circularity = 0
 
@@ -173,7 +187,7 @@ def get_morphological_features_from_mask(
         orientation_angle = 0
         if isinstance(largest_contour, cv2.UMat):
             largest_contour = largest_contour.get()
-        
+
         if len(largest_contour) >= 5:
             ellipse = cv2.fitEllipse(largest_contour)
             (_, axes, orientation) = ellipse
@@ -195,19 +209,19 @@ def get_morphological_features_from_mask(
         compactness = np.sqrt(4 * area / np.pi) / perimeter if perimeter != 0 else 0
 
         mask_info = {
-            'area': area,
-            'perimeter': perimeter,
-            'aspect_ratio': aspect_ratio,
-            'extend': extent,
-            'orientated_angle': orientation_angle,
-            'circularity': circularity,
-            'hull_area': hull_area,
-            'solidity': solidity,
-            'hull_perimeter': hull_perimeter,
-            'convexity': convexity,
-            'eccentricity': eccentricity,
-            'compactness': compactness,
-            'major_axis_radius': major_axis_radius,
-            'minor_axis_radius': minor_axis_radius
+            "area": area,
+            "perimeter": perimeter,
+            "aspect_ratio": aspect_ratio,
+            "extend": extent,
+            "orientated_angle": orientation_angle,
+            "circularity": circularity,
+            "hull_area": hull_area,
+            "solidity": solidity,
+            "hull_perimeter": hull_perimeter,
+            "convexity": convexity,
+            "eccentricity": eccentricity,
+            "compactness": compactness,
+            "major_axis_radius": major_axis_radius,
+            "minor_axis_radius": minor_axis_radius,
         }
     return mask_info
