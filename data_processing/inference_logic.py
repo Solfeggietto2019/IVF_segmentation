@@ -5,6 +5,9 @@ from utils.utils import find_bbox_center, find_nearest_object, get_morphological
 from utils.dataclasses import SelectedSperm
 
 egg_class = 4
+cooldown_frames = 30  
+last_collision_frame = -cooldown_frames  
+
 
 def process_inference_results(selected_sperm: SelectedSperm, sperms_data, current_frame, results: Any, frame: np.ndarray, width: int, height: int, bbox_size: int = 30) -> np.ndarray:
     """
@@ -16,6 +19,7 @@ def process_inference_results(selected_sperm: SelectedSperm, sperms_data, curren
     :param height: The height of the video frame.
     :return: The annotated frame.
     """
+    global last_collision_frame
     if results[0].boxes is not None and results[0].masks is not None:
         boxes = results[0].boxes.xyxyn.cpu().numpy()
         cls = results[0].boxes.cls.cpu().numpy().astype(int)
@@ -56,27 +60,27 @@ def process_inference_results(selected_sperm: SelectedSperm, sperms_data, curren
 
             for needle_bbox in needle_bboxes:
                 if is_bbox_overlaping(needle_bbox, sperm_bbox) and egg_class not in cls:
-                    x_min, y_min, x_max, y_max = sperm_bbox
-                    sperm_bbox_center_point = find_bbox_center(x_min, y_min, x_max, y_max)
-                    overlaping_sperm = find_nearest_object(sperm_bbox_center_point, sperms_data, current_frame)
-                    if overlaping_sperm:
-                        selected_sperm.Id = overlaping_sperm.id
-                        selected_sperm.Data = overlaping_sperm.standard_motility_parameters
-                        selected_sperm.mask = mask
-                        selected_sperm.bbox = box
-                        selected_sperm.frame = current_frame
-                    cv2.putText(annotated_frame, "Collision Detected", (needle_bbox[0], needle_bbox[1] - 10),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-                    cv2.rectangle(annotated_frame, 
-                                    (needle_bbox[0], needle_bbox[1]), 
-                                    (needle_bbox[2], needle_bbox[3]), 
-                                    (0, 0, 255), 2)  # Mark the collision in red
-
-                    #print(f"Collision detected between needle and sperm {selected_sperm.Id}")
+                    if current_frame - last_collision_frame > cooldown_frames:
+                        print(f"{current_frame}, {last_collision_frame}, {cooldown_frames} *******************************")
+                        x_min, y_min, x_max, y_max = sperm_bbox
+                        sperm_bbox_center_point = find_bbox_center(x_min, y_min, x_max, y_max)
+                        overlaping_sperm = find_nearest_object(sperm_bbox_center_point, sperms_data, current_frame)
+                        if overlaping_sperm:
+                            selected_sperm.Id = overlaping_sperm.id
+                            selected_sperm.Data = overlaping_sperm.standard_motility_parameters
+                            selected_sperm.mask = mask
+                            selected_sperm.bbox = box
+                            selected_sperm.frame = current_frame
+                        cv2.putText(annotated_frame, "Collision Detected", (needle_bbox[0], needle_bbox[1] - 10),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+                        cv2.rectangle(annotated_frame, 
+                                        (needle_bbox[0], needle_bbox[1]), 
+                                        (needle_bbox[2], needle_bbox[3]), 
+                                        (0, 0, 255), 2) 
+                        last_collision_frame = current_frame
 
         elif class_id == 4:
-            # When class_id is 4, display the track_id of the last collided object of class 0
-            if selected_sperm.Id is not None:
+            if selected_sperm and selected_sperm.Id is not None:
                 print(f"Track ID of the selected sperm: {selected_sperm.Id}")
                 sperm_morph_info = get_morphological_features_from_mask(selected_sperm)
                 cv2.putText(annotated_frame, f"Selected Sperm Track ID: {selected_sperm.Id}",
