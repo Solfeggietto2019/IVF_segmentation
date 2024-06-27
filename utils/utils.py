@@ -3,6 +3,7 @@ import numpy as np
 from typing import List, Tuple, Any, Dict
 import math
 from utils.dataclasses import Sperm, SelectedSperm
+from utils.dataclasses import Egg, VersionControl, DataStructure
 
 
 def adjust_coordinates(
@@ -227,3 +228,27 @@ def get_morphological_features_from_mask(sperm: SelectedSperm) -> None:
             "minor_axis_radius": minor_axis_radius,
         }
     return mask_info
+
+def make_response_json(sperm_info, egg_info, frame_number):
+    version_control = VersionControl()
+    egg_mask = egg_info['oocytes'][0]['masks']
+    egg_features = egg_info['oocytes'][0]['features']
+
+    egg = Egg(frame_number, egg_mask, egg_features)
+    data_structure = DataStructure(
+        VersionControl=version_control,
+        SiD=sperm_info,
+        Aeris=egg
+    )
+    json_output = data_structure.to_json()
+    return json_output 
+
+def make_final_json(sperms, eggs):
+    version_control = VersionControl()
+    data_structure = DataStructure(
+        VersionControl=version_control,
+        SiD=sperms,
+        Aeris=eggs
+    )
+    json_output = data_structure.to_json()
+    return json_output 

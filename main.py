@@ -3,8 +3,8 @@ from data_processing.json_reader import JSONReader
 from data_processing.stream_reader import VideoStreamReader
 from data_processing.yolo_model import YOLOModel
 from data_processing.inference_logic import process_inference_results
-from utils.utils import draw_positions, adjust_coordinates
-from utils.dataclasses import SelectedSperm
+from utils.utils import draw_positions, adjust_coordinates, make_final_json
+from utils.dataclasses import SelectedSperm, Egg
 
 
 def main() -> None:
@@ -12,10 +12,15 @@ def main() -> None:
     video_file_path = "data/video/IsaacVideoTest_2024-06-25-22-45-Camera.mp4"
     model_path = "models/best.pt"
 
-    selected_sperm = SelectedSperm
+    selected_sperm = SelectedSperm()
     reader = JSONReader(json_file_path)
     video_reader = VideoStreamReader(video_file_path)
     yolo = YOLOModel(model_path)
+
+    
+    selected_sperms = []
+    egg_responses = []
+    frame_numbers = []
 
     sperms_data = reader.extract_sperms_data()
 
@@ -41,7 +46,7 @@ def main() -> None:
                             frame, (x_adjusted, y_adjusted), sperm.id
                         )
 
-        annotated_frame = process_inference_results(
+        annotated_frame, sperm_object, egg_object, selected_frame = process_inference_results(
             selected_sperm,
             sperms_data,
             num_frame,
@@ -53,12 +58,28 @@ def main() -> None:
         )
         cv2.imshow("YOLOv8 Tracking", annotated_frame)
 
+        if sperm_object and egg_object and selected_frame:            
+            selected_sperms.append(sperm_object)
+            egg_responses.append(egg_object)
+            frame_numbers.append(selected_frame)
+
+
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 
     video_reader.release()
     cv2.destroyAllWindows()
 
+    eggs = [
+        Egg(frame_number, response['oocytes'][0]['masks'], response['oocytes'][0]['features'])
+        for response, frame_number in zip(egg_responses, frame_numbers)
+    ]
+    sperms = [sperm_object for sperm_object in selected_sperms]
+
+    json_output = make_final_json(eggs, sperms)
+    filename = "test.json"
+    with open(filename, 'w') as file:
+        file.write(json_output)
 
 if __name__ == "__main__":
     main()

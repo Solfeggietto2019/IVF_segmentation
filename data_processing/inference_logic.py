@@ -5,6 +5,7 @@ from utils.utils import (
     find_bbox_center,
     find_nearest_object,
     get_morphological_features_from_mask,
+    make_response_json
 )
 from utils.dataclasses import SelectedSperm
 import time
@@ -19,6 +20,7 @@ last_collision_frame = -cooldown_frames
 fps = 30
 frame_saved = False
 save_frame_delay = 3 * fps
+
 
 
 def process_inference_results(
@@ -175,13 +177,11 @@ def process_inference_results(
 
                             print(f"Frame guardado como {filename}")
                             frame_saved = True
-                            """
-                            Mandar Número de frame,
-                            Máscara del óvulo = oocyte_features = response['oocytes'][0]['masks']
-                            mandar features del óvulo = oocyte_features = response['oocytes'][0]['features']
-                            """
+                            selected_sperm = selected_sperm.to_serializable()
+                            #response_json = make_response_json(selected_sperm, response, current_frame)
+                            return annotated_frame, selected_sperm, response, current_frame
 
-    return annotated_frame
+    return annotated_frame, None, None, None 
 
 
 def is_bbox_overlaping(bbox1, bbox2):

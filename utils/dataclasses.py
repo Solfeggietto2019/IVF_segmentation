@@ -1,5 +1,7 @@
-from dataclasses import dataclass
-from typing import List, Tuple, Dict
+from dataclasses import dataclass, asdict, field
+from typing import List, Tuple, Dict, Any, Union
+import json
+import numpy as np
 
 
 @dataclass
@@ -27,15 +29,49 @@ class Sperm:
     motility_parameters: Dict[str, float]
     standard_motility_parameters: Dict[str, float]
 
-
+@dataclass
 class SelectedSperm:
-    def __init__(self):
-        self.Id = ""
-        self.motility_parameters = {}
-        self.morphological_parameters = {}
-        self.standardize_morph_parameters = {} # MANDAR
-        self.mask = [] # MARK
-        self.bbox = []
-        self.frame = None
-        self.sid_score: int # MANDAR
-        self.initial_frame: int # MANDAR
+    Id: str = None
+    motility_parameters: Dict[str, float] = None
+    morphological_parameters: Dict[str, float] = None
+    standardize_morph_parameters: Dict[str, float] = None # MANDAR
+    mask: Union[List[Any], np.ndarray] = field(default_factory=list) # MARK
+    bbox: Union[List[Any], np.ndarray] = field(default_factory=list)
+    frame: Any = None
+    sid_score: int = None # MANDAR
+    initial_frame: int = None # MANDAR
+
+    def to_serializable(self):
+        return {
+            "Id": self.Id,
+            "motility_parameters": self.motility_parameters,
+            "morphological_parameters": self.morphological_parameters,
+            "standardize_morph_parameters": self.standardize_morph_parameters,
+            "mask": self.mask.tolist() if isinstance(self.mask, np.ndarray) else self.mask,
+            "bbox": self.bbox.tolist() if isinstance(self.bbox, np.ndarray) else self.bbox,
+            "frame": self.frame,
+            "sid_score": self.sid_score,
+            "initial_frame": self.initial_frame
+        }
+
+
+@dataclass
+class Egg:
+    frame_number: int
+    mask : Any
+    egg_features : Any
+
+@dataclass
+class VersionControl:
+    ApiVersion: str = "1.0"
+    AnalyzedVideo: str = "video.mp4"
+    Fecha: str = "2024-06-26"
+
+@dataclass
+class DataStructure:
+    VersionControl: VersionControl
+    SiD: List[SelectedSperm]
+    Aeris: List[Egg]
+
+    def to_json(self):
+        return json.dumps(asdict(self), indent=4)
