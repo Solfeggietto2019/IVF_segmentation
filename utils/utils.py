@@ -111,9 +111,10 @@ def find_nearest_object(
     sperm_bbox_center_point: Tuple[float, float],
     sperms_data: Dict[str, List[Sperm]],
     current_frame: int,
-) -> Sperm:
+) -> Tuple[Sperm, int]:
     min_distance = float("inf")
     nearest_object = None
+    initial_frame = None
 
     for sperm_list in sperms_data.values():
         for sperm in sperm_list:
@@ -126,8 +127,9 @@ def find_nearest_object(
                     if distance < min_distance and distance < 10:
                         min_distance = distance
                         nearest_object = sperm
+                        initial_frame = sperm.initial_frame
 
-    return nearest_object
+    return nearest_object, initial_frame
 
 
 def get_morphological_features_from_mask(sperm: SelectedSperm) -> None:

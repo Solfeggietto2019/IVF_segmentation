@@ -31,7 +31,11 @@ class Sperm:
 class SelectedSperm:
     def __init__(self):
         self.Id = ""
-        self.Data = {}
-        self.mask = []
+        self.motility_parameters = {}
+        self.morphological_parameters = {}
+        self.standardize_morph_parameters = {} # MANDAR
+        self.mask = [] # MARK
         self.bbox = []
         self.frame = None
+        self.sid_score: int # MANDAR
+        self.initial_frame: int # MANDAR

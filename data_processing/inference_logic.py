@@ -7,10 +7,18 @@ from utils.utils import (
     get_morphological_features_from_mask,
 )
 from utils.dataclasses import SelectedSperm
+import time
+from api_calls.aeris import api_maturity, api_key
+from utils.standardize_metrics import standardize_sperm_metrics
 
 egg_class = 4
+pipette_class = 5
+pipette_detected_frame = -1
 cooldown_frames = 30
 last_collision_frame = -cooldown_frames
+fps = 30
+frame_saved = False
+save_frame_delay = 3 * fps
 
 
 def process_inference_results(
@@ -21,6 +29,7 @@ def process_inference_results(
     frame: np.ndarray,
     width: int,
     height: int,
+    original_frame: np.ndarray,
     bbox_size: int = 30,
 ) -> np.ndarray:
     """
@@ -32,7 +41,8 @@ def process_inference_results(
     :param height: The height of the video frame.
     :return: The annotated frame.
     """
-    global last_collision_frame
+    global last_collision_frame, pipette_detected_frame, frame_saved
+
     if results[0].boxes is not None and results[0].masks is not None:
         boxes = results[0].boxes.xyxyn.cpu().numpy()
         cls = results[0].boxes.cls.cpu().numpy().astype(int)
@@ -91,21 +101,24 @@ def process_inference_results(
             for needle_bbox in needle_bboxes:
                 if is_bbox_overlaping(needle_bbox, sperm_bbox) and egg_class not in cls:
                     if current_frame - last_collision_frame > cooldown_frames:
+                        frame_saved = False
                         x_min, y_min, x_max, y_max = sperm_bbox
                         sperm_bbox_center_point = find_bbox_center(
                             x_min, y_min, x_max, y_max
                         )
-                        overlaping_sperm = find_nearest_object(
+                        overlaping_sperm, initial_sperm_frame = find_nearest_object(
                             sperm_bbox_center_point, sperms_data, current_frame
                         )
                         if overlaping_sperm:
                             selected_sperm.Id = overlaping_sperm.id
-                            selected_sperm.Data = (
+                            selected_sperm.motility_parameters = (
                                 overlaping_sperm.standard_motility_parameters
                             )
                             selected_sperm.mask = mask
                             selected_sperm.bbox = box
                             selected_sperm.frame = current_frame
+                            selected_sperm.sid_score = overlaping_sperm.SiDScore
+                            selected_sperm.initial_frame = initial_sperm_frame
                         cv2.putText(
                             annotated_frame,
                             "Collision Detected",
@@ -128,6 +141,9 @@ def process_inference_results(
             if selected_sperm and selected_sperm.Id is not None:
                 print(f"Track ID of the selected sperm: {selected_sperm.Id}")
                 sperm_morph_info = get_morphological_features_from_mask(selected_sperm)
+                standardize_morph_sperm_metrics = standardize_sperm_metrics(
+                    sperm_morph_info
+                )  # MANDAR
                 cv2.putText(
                     annotated_frame,
                     f"Selected Sperm Track ID: {selected_sperm.Id}",
@@ -137,7 +153,33 @@ def process_inference_results(
                     (0, 255, 255),
                     2,
                 )
-                print(sperm_morph_info)
+                selected_sperm.morphological_parameters = sperm_morph_info
+                selected_sperm.standardize_morph_parameters = (
+                    standardize_morph_sperm_metrics
+                )
+                if pipette_class in cls:
+                    if pipette_detected_frame == -1:
+                        pipette_detected_frame = current_frame
+                        frame_saved = False
+                    else:
+                        if (
+                            current_frame - pipette_detected_frame > save_frame_delay
+                            and not frame_saved
+                        ):
+                            timestamp = int(time.time())
+                            filename = f"inyected_egg_{timestamp}.png"
+                            cv2.imwrite(filename, original_frame)
+                            response = api_maturity(filename, api_key)
+                            if response:
+                                print("Resultado del análisis:", response)
+
+                            print(f"Frame guardado como {filename}")
+                            frame_saved = True
+                            """
+                            Mandar Número de frame,
+                            Máscara del óvulo = oocyte_features = response['oocytes'][0]['masks']
+                            mandar features del óvulo = oocyte_features = response['oocytes'][0]['features']
+                            """
 
     return annotated_frame
 

@@ -21,6 +21,7 @@ def main() -> None:
 
     for video_data in video_reader:
         frame, width, height, fps, num_frame = video_data
+        original_frame = frame.copy()
         num_frame -= 1
         results = yolo.infer(frame)
 
@@ -41,7 +42,14 @@ def main() -> None:
                         )
 
         annotated_frame = process_inference_results(
-            selected_sperm, sperms_data, num_frame, results, frame, width, height
+            selected_sperm,
+            sperms_data,
+            num_frame,
+            results,
+            frame,
+            width,
+            height,
+            original_frame,
         )
         cv2.imshow("YOLOv8 Tracking", annotated_frame)
 
