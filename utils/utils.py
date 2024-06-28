@@ -246,9 +246,11 @@ def make_response_json(sperm_info, egg_info, frame_number):
 def make_final_json(sperms, eggs):
     version_control = VersionControl()
     data_structure = DataStructure(
+        objectID = "0Wxootb0CP",
         VersionControl=version_control,
         SiD=sperms,
         Aeris=eggs
     )
     json_output = data_structure.to_json()
-    return json_output 
+    json_output_dict = data_structure.to_dict()
+    return json_output, json_output_dict

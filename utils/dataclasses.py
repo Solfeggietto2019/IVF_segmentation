@@ -40,6 +40,7 @@ class SelectedSperm:
     frame: Any = None
     sid_score: int = None # MANDAR
     initial_frame: int = None # MANDAR
+    b64_string_frame:str = None # Mandar
 
     def to_serializable(self):
         return {
@@ -51,7 +52,8 @@ class SelectedSperm:
             "bbox": self.bbox.tolist() if isinstance(self.bbox, np.ndarray) else self.bbox,
             "frame": self.frame,
             "sid_score": self.sid_score,
-            "initial_frame": self.initial_frame
+            "initial_frame": self.initial_frame,
+            "b64_string_frame": self.b64_string_frame,
         }
 
 
@@ -60,6 +62,7 @@ class Egg:
     frame_number: int
     mask : Any
     egg_features : Any
+    b64_string_frame:str = None # Mandar
 
 @dataclass
 class VersionControl:
@@ -69,9 +72,13 @@ class VersionControl:
 
 @dataclass
 class DataStructure:
+    objectID: str
     VersionControl: VersionControl
     SiD: List[SelectedSperm]
     Aeris: List[Egg]
 
     def to_json(self):
         return json.dumps(asdict(self), indent=4)
+
+    def to_dict(self):
+        return asdict(self)

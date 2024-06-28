@@ -9,17 +9,18 @@ from utils.utils import (
 )
 from utils.dataclasses import SelectedSperm
 import time
-from api_calls.aeris import api_maturity, api_key
+from api_calls.aeris import api_maturity, api_key, convert_image_to_base64
 from utils.standardize_metrics import standardize_sperm_metrics
 
 egg_class = 4
 pipette_class = 5
 pipette_detected_frame = -1
 cooldown_frames = 30
-last_collision_frame = -cooldown_frames
 fps = 30
-frame_saved = False
 save_frame_delay = 3 * fps
+last_collision_frame = -cooldown_frames
+frame_saved = False
+
 
 
 
@@ -116,11 +117,15 @@ def process_inference_results(
                             selected_sperm.motility_parameters = (
                                 overlaping_sperm.standard_motility_parameters
                             )
+                            filename_sperm = f"sperm_image.png"
+                            cv2.imwrite(filename_sperm, original_frame)
+                            sperm_b64_frame_image = convert_image_to_base64(filename_sperm)
                             selected_sperm.mask = mask
                             selected_sperm.bbox = box
                             selected_sperm.frame = current_frame
                             selected_sperm.sid_score = overlaping_sperm.SiDScore
                             selected_sperm.initial_frame = initial_sperm_frame
+                            selected_sperm.b64_string_frame = sperm_b64_frame_image
                         cv2.putText(
                             annotated_frame,
                             "Collision Detected",
@@ -169,19 +174,20 @@ def process_inference_results(
                             and not frame_saved
                         ):
                             timestamp = int(time.time())
-                            filename = f"inyected_egg_{timestamp}.png"
-                            cv2.imwrite(filename, original_frame)
-                            response = api_maturity(filename, api_key)
+                            filename_egg = f"inyected_egg_{timestamp}.png"
+                            cv2.imwrite(filename_egg, original_frame)
+                            egg_b64_frame_image = convert_image_to_base64(filename_egg)
+                            response = api_maturity(filename_egg, api_key)
                             if response:
                                 print("Resultado del análisis:", response)
 
-                            print(f"Frame guardado como {filename}")
+                            print(f"Frame guardado como {filename_egg}")
                             frame_saved = True
                             selected_sperm = selected_sperm.to_serializable()
                             #response_json = make_response_json(selected_sperm, response, current_frame)
-                            return annotated_frame, selected_sperm, response, current_frame
+                            return annotated_frame, selected_sperm, response, current_frame, egg_b64_frame_image
 
-    return annotated_frame, None, None, None 
+    return annotated_frame, None, None, None, None
 
 
 def is_bbox_overlaping(bbox1, bbox2):

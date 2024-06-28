@@ -5,6 +5,7 @@ from data_processing.yolo_model import YOLOModel
 from data_processing.inference_logic import process_inference_results
 from utils.utils import draw_positions, adjust_coordinates, make_final_json
 from utils.dataclasses import SelectedSperm, Egg
+from api_calls.sofi import call_sofi
 
 
 def main() -> None:
@@ -21,6 +22,7 @@ def main() -> None:
     selected_sperms = []
     egg_responses = []
     frame_numbers = []
+    egg_b64_frames = []
 
     sperms_data = reader.extract_sperms_data()
 
@@ -46,7 +48,7 @@ def main() -> None:
                             frame, (x_adjusted, y_adjusted), sperm.id
                         )
 
-        annotated_frame, sperm_object, egg_object, selected_frame = process_inference_results(
+        annotated_frame, sperm_object, egg_object, selected_frame, egg_b64 = process_inference_results(
             selected_sperm,
             sperms_data,
             num_frame,
@@ -58,10 +60,11 @@ def main() -> None:
         )
         cv2.imshow("YOLOv8 Tracking", annotated_frame)
 
-        if sperm_object and egg_object and selected_frame:            
+        if sperm_object and egg_object and selected_frame and egg_b64:            
             selected_sperms.append(sperm_object)
             egg_responses.append(egg_object)
             frame_numbers.append(selected_frame)
+            egg_b64_frames.append(egg_b64)
 
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -71,15 +74,19 @@ def main() -> None:
     cv2.destroyAllWindows()
 
     eggs = [
-        Egg(frame_number, response['oocytes'][0]['masks'], response['oocytes'][0]['features'])
-        for response, frame_number in zip(egg_responses, frame_numbers)
+        Egg(frame_number, response['oocytes'][0]['masks'], response['oocytes'][0]['features'], egg_b64)
+        for response, frame_number, egg_b64 in zip(egg_responses, frame_numbers, egg_b64_frames)
     ]
     sperms = [sperm_object for sperm_object in selected_sperms]
 
-    json_output = make_final_json(eggs, sperms)
+    json_output, json_dictionary = make_final_json(sperms, eggs)
     filename = "test.json"
     with open(filename, 'w') as file:
         file.write(json_output)
+    
+    sofi_response = call_sofi(json_dictionary)
+    print(sofi_response[0].content)
+
 
 if __name__ == "__main__":
     main()
