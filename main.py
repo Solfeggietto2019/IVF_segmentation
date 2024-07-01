@@ -75,6 +75,7 @@ def main() -> None:
 
     eggs = [
         Egg(frame_number, response['oocytes'][0]['masks'], response['oocytes'][0]['features'], egg_b64)
+        if response['oocytes'] else None
         for response, frame_number, egg_b64 in zip(egg_responses, frame_numbers, egg_b64_frames)
     ]
     sperms = [sperm_object for sperm_object in selected_sperms]

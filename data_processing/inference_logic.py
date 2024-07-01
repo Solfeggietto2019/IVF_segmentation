@@ -113,6 +113,7 @@ def process_inference_results(
                             sperm_bbox_center_point, sperms_data, current_frame
                         )
                         if overlaping_sperm:
+                            
                             selected_sperm.Id = overlaping_sperm.id
                             selected_sperm.motility_parameters = (
                                 overlaping_sperm.standard_motility_parameters
@@ -126,6 +127,7 @@ def process_inference_results(
                             selected_sperm.sid_score = overlaping_sperm.SiDScore
                             selected_sperm.initial_frame = initial_sperm_frame
                             selected_sperm.b64_string_frame = sperm_b64_frame_image
+                        pipette_detected_frame = -1
                         cv2.putText(
                             annotated_frame,
                             "Collision Detected",

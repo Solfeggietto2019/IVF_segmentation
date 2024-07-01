@@ -11,6 +11,9 @@ def process_json_and_call_sofi(data: dict) -> dict:
     if len(siD_list) != len(aeris_list):
         raise ValueError("Las listas SiD y Aeris no tienen el mismo número de elementos")
     for sid_item, aeris_item in zip(siD_list, aeris_list):
+        if sid_item == None or aeris_item == None:
+            print("Got None values for Egg or Sperm")
+            continue
         # Extraer los datos necesarios de sid_item
         motility_parameters = sid_item.get("motility_parameters", {})
         morphological_parameters = sid_item.get("morphological_parameters", {})
@@ -19,13 +22,10 @@ def process_json_and_call_sofi(data: dict) -> dict:
         # Crear el diccionario de datos para la llamada al API
         request_data = {
             "body": {
-                "VSL": motility_parameters.get("VSL", 0),
+                "VSL": motility_parameters.get("VSL", 0),   
                 "VCL": motility_parameters.get("VCL", 0),
-                "VAP": motility_parameters.get("VAP", 0),
                 "MAD": motility_parameters.get("MAD", 0),
                 "LIN": motility_parameters.get("LIN", 0),
-                "WOB": motility_parameters.get("WOB", 0),
-                "STR": motility_parameters.get("STR", 0),
                 "ALH": motility_parameters.get("ALH", 0),
                 "cyto_minor_minoraxis": egg_features_parameters.get("cyto_minor_minoraxis", 0),
                 "cyto_majoraxis": egg_features_parameters.get("cyto_majoraxis", 0),
