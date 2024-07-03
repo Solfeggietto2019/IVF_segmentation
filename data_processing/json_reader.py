@@ -2,6 +2,7 @@ import json
 from typing import List, Dict, Any, Union
 from utils.dataclasses import Sequence, Sperm
 from collections import defaultdict
+from utils.utils import download_file_from_s3
 
 
 class JSONReader:
@@ -54,6 +55,31 @@ class JSONReader:
             sperms_data[idx].append(sperm)
 
         return sperms_data
+
+    def extract_video_url(self) -> str:
+        """
+        Extract the video URL from the JSON data.
+        """
+        if not self.data:
+            print("No data loaded")
+            return ""
+        return self.data.get("video_url", "")
+
+    def download_video(self, save_path: str) -> None:
+        """
+        Extract the video URL from the JSON data and download the video.
+
+        Args:
+            save_path (str): The local path where the video will be saved.
+
+        Returns:
+            None
+        """
+        video_url = self.extract_video_url()
+        if video_url:
+            download_file_from_s3(video_url, save_path)
+        else:
+            print("No video URL found in the JSON file.")
 
     def extract_sperms_data_v2(self) -> Union[Dict[str, List[Sperm]], None]:
         """

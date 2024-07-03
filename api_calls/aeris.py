@@ -95,8 +95,10 @@ def get_egg_features(response):
 
     return final_egg_features
 
+
 def main():
-    api_maturity("./inyected_egg_1719960912.png",api_key)
+    api_maturity("./inyected_egg_1719960912.png", api_key)
+
 
 if __name__ == "__main__":
     main()

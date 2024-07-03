@@ -5,7 +5,7 @@ from utils.utils import (
     find_bbox_center,
     find_nearest_object,
     get_morphological_features_from_mask,
-    make_response_json
+    make_response_json,
 )
 from utils.dataclasses import SelectedSperm
 import time
@@ -20,8 +20,6 @@ fps = 30
 save_frame_delay = 3 * fps
 last_collision_frame = -cooldown_frames
 frame_saved = False
-
-
 
 
 def process_inference_results(
@@ -113,14 +111,16 @@ def process_inference_results(
                             sperm_bbox_center_point, sperms_data, current_frame
                         )
                         if overlaping_sperm:
-                            
+
                             selected_sperm.Id = overlaping_sperm.id
                             selected_sperm.motility_parameters = (
                                 overlaping_sperm.standard_motility_parameters
                             )
                             filename_sperm = f"sperm_image.png"
                             cv2.imwrite(filename_sperm, original_frame)
-                            sperm_b64_frame_image = convert_image_to_base64(filename_sperm)
+                            sperm_b64_frame_image = convert_image_to_base64(
+                                filename_sperm
+                            )
                             selected_sperm.mask = mask
                             selected_sperm.bbox = box
                             selected_sperm.frame = current_frame
@@ -186,8 +186,14 @@ def process_inference_results(
                             print(f"Frame guardado como {filename_egg}")
                             frame_saved = True
                             selected_sperm = selected_sperm.to_serializable()
-                            #response_json = make_response_json(selected_sperm, response, current_frame)
-                            return annotated_frame, selected_sperm, response, current_frame, egg_b64_frame_image
+                            # response_json = make_response_json(selected_sperm, response, current_frame)
+                            return (
+                                annotated_frame,
+                                selected_sperm,
+                                response,
+                                current_frame,
+                                egg_b64_frame_image,
+                            )
 
     return annotated_frame, None, None, None, None
 

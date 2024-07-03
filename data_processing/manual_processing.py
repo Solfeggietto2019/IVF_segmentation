@@ -6,7 +6,7 @@ from utils.utils import (
     find_nearest_object,
     get_morphological_features_from_mask,
     make_response_json,
-    calculate_distance
+    calculate_distance,
 )
 from utils.dataclasses import SelectedSperm
 import time
@@ -21,7 +21,7 @@ fps = 30
 save_frame_delay = 3 * fps
 last_collision_frame = -cooldown_frames
 frame_saved = False
-            
+
 
 def process_inference_results_manually(
     selected_sperm: SelectedSperm,
@@ -55,7 +55,6 @@ def process_inference_results_manually(
 
     annotated_frame = results[0].plot(boxes=False)
 
-
     for box, mask, class_id, confidence in zip(boxes, masks, cls, confidences):
         x_min, y_min, x_max, y_max = box
         text_position = (int(x_min * width), int(y_min * height))
@@ -69,13 +68,13 @@ def process_inference_results_manually(
             )
             for sperm in manual_selected_sperms:
                 if current_frame == sperm.initial_frame:
-                    #position_idx = (current_frame - 1) - sperm.initial_frame
+                    # position_idx = (current_frame - 1) - sperm.initial_frame
                     if 0 <= current_frame < len(sperm.positions):
                         frame_number, x, y = sperm.positions[current_frame]
                         x_min, y_min, x_max, y_max = sperm_bbox
                         sperm_bbox_center_point = find_bbox_center(
-                                x_min, y_min, x_max, y_max
-                            )
+                            x_min, y_min, x_max, y_max
+                        )
                         position = (x, y)
                         distance = calculate_distance(sperm_bbox_center_point, position)
                         if distance < 10:
@@ -85,7 +84,9 @@ def process_inference_results_manually(
                             )
                             filename_sperm = f"sperm_image.png"
                             cv2.imwrite(filename_sperm, original_frame)
-                            sperm_b64_frame_image = convert_image_to_base64(filename_sperm)
+                            sperm_b64_frame_image = convert_image_to_base64(
+                                filename_sperm
+                            )
                             selected_sperm.mask = mask
                             selected_sperm.bbox = box
                             selected_sperm.frame = current_frame
@@ -133,6 +134,12 @@ def process_inference_results_manually(
                             print(f"Frame guardado como {filename_egg}")
                             frame_saved = True
                             selected_sperm = selected_sperm.to_serializable()
-                            return annotated_frame, selected_sperm, response, current_frame, egg_b64_frame_image
+                            return (
+                                annotated_frame,
+                                selected_sperm,
+                                response,
+                                current_frame,
+                                egg_b64_frame_image,
+                            )
 
     return annotated_frame, None, None, None, None

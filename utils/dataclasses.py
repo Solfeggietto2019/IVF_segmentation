@@ -29,18 +29,19 @@ class Sperm:
     motility_parameters: Dict[str, float]
     standard_motility_parameters: Dict[str, float]
 
+
 @dataclass
 class SelectedSperm:
     Id: str = None
     motility_parameters: Dict[str, float] = None
     morphological_parameters: Dict[str, float] = None
-    standardize_morph_parameters: Dict[str, float] = None # MANDAR
-    mask: Union[List[Any], np.ndarray] = field(default_factory=list) # MARK
+    standardize_morph_parameters: Dict[str, float] = None  # MANDAR
+    mask: Union[List[Any], np.ndarray] = field(default_factory=list)  # MARK
     bbox: Union[List[Any], np.ndarray] = field(default_factory=list)
     frame: Any = None
-    sid_score: int = None # MANDAR
-    initial_frame: int = None # MANDAR
-    b64_string_frame:str = None # Mandar
+    sid_score: int = None  # MANDAR
+    initial_frame: int = None  # MANDAR
+    b64_string_frame: str = None  # Mandar
 
     def to_serializable(self):
         return {
@@ -48,8 +49,12 @@ class SelectedSperm:
             "motility_parameters": self.motility_parameters,
             "morphological_parameters": self.morphological_parameters,
             "standardize_morph_parameters": self.standardize_morph_parameters,
-            "mask": self.mask.tolist() if isinstance(self.mask, np.ndarray) else self.mask,
-            "bbox": self.bbox.tolist() if isinstance(self.bbox, np.ndarray) else self.bbox,
+            "mask": (
+                self.mask.tolist() if isinstance(self.mask, np.ndarray) else self.mask
+            ),
+            "bbox": (
+                self.bbox.tolist() if isinstance(self.bbox, np.ndarray) else self.bbox
+            ),
             "frame": self.frame,
             "sid_score": self.sid_score,
             "initial_frame": self.initial_frame,
@@ -60,15 +65,17 @@ class SelectedSperm:
 @dataclass
 class Egg:
     frame_number: int
-    mask : Any
-    egg_features : Any
-    b64_string_frame:str = None # Mandar
+    mask: Any
+    egg_features: Any
+    b64_string_frame: str = None  # Mandar
+
 
 @dataclass
 class VersionControl:
     ApiVersion: str = "1.0"
     AnalyzedVideo: str = "video.mp4"
     Fecha: str = "2024-06-26"
+
 
 @dataclass
 class DataStructure:

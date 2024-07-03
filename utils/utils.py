@@ -4,6 +4,7 @@ from typing import List, Tuple, Any, Dict
 import math
 from utils.dataclasses import Sperm, SelectedSperm
 from utils.dataclasses import Egg, VersionControl, DataStructure
+import requests
 
 
 def adjust_coordinates(
@@ -229,32 +230,33 @@ def get_morphological_features_from_mask(sperm: SelectedSperm) -> None:
         }
     return mask_info
 
+
 def make_response_json(sperm_info, egg_info, frame_number):
     version_control = VersionControl()
-    egg_mask = egg_info['oocytes'][0]['masks']
-    egg_features = egg_info['oocytes'][0]['features']
+    egg_mask = egg_info["oocytes"][0]["masks"]
+    egg_features = egg_info["oocytes"][0]["features"]
 
     egg = Egg(frame_number, egg_mask, egg_features)
     data_structure = DataStructure(
-        VersionControl=version_control,
-        SiD=sperm_info,
-        Aeris=egg
+        VersionControl=version_control, SiD=sperm_info, Aeris=egg
     )
     json_output = data_structure.to_json()
-    return json_output 
+    return json_output
+
 
 def make_final_json(sperms, eggs, sofi_responses):
     version_control = VersionControl()
     data_structure = DataStructure(
-        objectID = "0Wxootb0CP",
+        objectID="0Wxootb0CP",
         VersionControl=version_control,
         SiD=sperms,
         Aeris=eggs,
-        Sofi=sofi_responses
+        Sofi=sofi_responses,
     )
     json_output = data_structure.to_json()
     json_output_dict = data_structure.to_dict()
     return json_output, json_output_dict
+
 
 def get_manual_selected_sperms(sperms_data, ids_list):
     selected_sperms = []
@@ -265,3 +267,30 @@ def get_manual_selected_sperms(sperms_data, ids_list):
                     selected_sperms.append(sperm)
 
     return selected_sperms
+
+
+def download_file_from_s3(url: str, save_path: str) -> None:
+    """
+    Download a file from an S3 URL and save it to a specified path.
+
+    Args:
+        url (str): The URL of the file to download.
+        save_path (str): The local path where the file will be saved.
+
+    Returns:
+        None
+    """
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/58.0.3029.110 Safari/537.3"
+    }
+    response = requests.get(url, headers=headers, stream=True)
+    if response.status_code == 200:
+        with open(save_path, "wb") as f:
+            for chunk in response.iter_content(1024):
+                f.write(chunk)
+        print(f"File downloaded and saved to {save_path}")
+    elif response.status_code == 403:
+        print("Error 403: Access forbidden. Check the file permissions in S3.")
+    else:
+        print(f"Error downloading the file. Status code: {response.status_code}")
