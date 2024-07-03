@@ -3,14 +3,15 @@ from data_processing.json_reader import JSONReader
 from data_processing.stream_reader import VideoStreamReader
 from data_processing.yolo_model import YOLOModel
 from data_processing.inference_logic import process_inference_results
-from utils.utils import draw_positions, adjust_coordinates, make_final_json
+from data_processing.manual_processing import process_inference_results_manually
+from utils.utils import draw_positions, adjust_coordinates, make_final_json, get_manual_selected_sperms
 from utils.dataclasses import SelectedSperm, Egg
 from api_calls.sofi import call_sofi
 
 
 def main() -> None:
-    json_file_path = "data/json/IsaacVideoTest_2024-06-25-22-45-Camera.json"
-    video_file_path = "data/video/IsaacVideoTest_2024-06-25-22-45-Camera.mp4"
+    json_file_path = "data/json/IsaacVideoTest3_2024-06-25-22-56-Camera.json"
+    video_file_path = "data/video/IsaacVideoTest3_2024-06-25-22-56-Camera.mp4"
     model_path = "models/best.pt"
 
     selected_sperm = SelectedSperm()
@@ -18,13 +19,20 @@ def main() -> None:
     video_reader = VideoStreamReader(video_file_path)
     yolo = YOLOModel(model_path)
 
-    
+    choice = input("Automatic processing (y/n): ").strip().lower()
+    if choice == "n":
+        ids_input = input("Manual processing. Please enter a list of ID's separated by commas in inyection order (e.g.: 1,2,3): ")
+        ids_list = [id.strip() for id in ids_input.split(',')]
+        print(f"Selected Id's: {ids_list}")
+
     selected_sperms = []
     egg_responses = []
     frame_numbers = []
     egg_b64_frames = []
 
     sperms_data = reader.extract_sperms_data()
+    if choice == "n":
+        manual_selected_sperms = get_manual_selected_sperms(sperms_data, ids_list)
 
     for video_data in video_reader:
         frame, width, height, fps, num_frame = video_data
@@ -47,17 +55,21 @@ def main() -> None:
                         frame = draw_positions(
                             frame, (x_adjusted, y_adjusted), sperm.id
                         )
+        
+        if choice == "y":
+            annotated_frame, sperm_object, egg_object, selected_frame, egg_b64 = process_inference_results(
+                selected_sperm,
+                sperms_data,
+                num_frame,
+                results,
+                frame,
+                width,
+                height,
+                original_frame,
+            )
+        else:
+            annotated_frame, sperm_object, egg_object, selected_frame, egg_b64 = process_inference_results_manually(selected_sperm, manual_selected_sperms, num_frame, results, width, height, original_frame)
 
-        annotated_frame, sperm_object, egg_object, selected_frame, egg_b64 = process_inference_results(
-            selected_sperm,
-            sperms_data,
-            num_frame,
-            results,
-            frame,
-            width,
-            height,
-            original_frame,
-        )
         cv2.imshow("YOLOv8 Tracking", annotated_frame)
 
         if sperm_object and egg_object and selected_frame and egg_b64:            
@@ -79,14 +91,12 @@ def main() -> None:
         for response, frame_number, egg_b64 in zip(egg_responses, frame_numbers, egg_b64_frames)
     ]
     sperms = [sperm_object for sperm_object in selected_sperms]
-
-    json_output, json_dictionary = make_final_json(sperms, eggs)
-    filename = "test.json"
+    sofi_responses = call_sofi(sperms, eggs)
+    sofi_responses_content = [response.json() for response in sofi_responses]
+    json_output, _ = make_final_json(sperms, eggs, sofi_responses_content)
+    filename = "test_final-56-manual.json"
     with open(filename, 'w') as file:
         file.write(json_output)
-    
-    sofi_response = call_sofi(json_dictionary)
-    print(sofi_response[0].content)
 
 
 if __name__ == "__main__":

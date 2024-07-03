@@ -243,14 +243,25 @@ def make_response_json(sperm_info, egg_info, frame_number):
     json_output = data_structure.to_json()
     return json_output 
 
-def make_final_json(sperms, eggs):
+def make_final_json(sperms, eggs, sofi_responses):
     version_control = VersionControl()
     data_structure = DataStructure(
         objectID = "0Wxootb0CP",
         VersionControl=version_control,
         SiD=sperms,
-        Aeris=eggs
+        Aeris=eggs,
+        Sofi=sofi_responses
     )
     json_output = data_structure.to_json()
     json_output_dict = data_structure.to_dict()
     return json_output, json_output_dict
+
+def get_manual_selected_sperms(sperms_data, ids_list):
+    selected_sperms = []
+    for selected_id in ids_list:
+        for sperm_list in sperms_data.values():
+            for sperm in sperm_list:
+                if sperm.id == selected_id:
+                    selected_sperms.append(sperm)
+
+    return selected_sperms

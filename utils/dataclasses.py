@@ -76,6 +76,7 @@ class DataStructure:
     VersionControl: VersionControl
     SiD: List[SelectedSperm]
     Aeris: List[Egg]
+    Sofi: List
 
     def to_json(self):
         return json.dumps(asdict(self), indent=4)

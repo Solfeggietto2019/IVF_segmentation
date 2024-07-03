@@ -1,12 +1,11 @@
 import requests
+from typing import List
 
 url = "https://nwndanoruj.execute-api.eu-west-2.amazonaws.com/prod/predict"
 validation_key = "peromiraquematangadijolachanga"
 
-def process_json_and_call_sofi(data: dict) -> dict:
+def process_json_and_call_sofi(siD_list, aeris_list) -> dict:
     sofi_responses = []
-    siD_list = data.get("SiD", [])
-    aeris_list = data.get("Aeris", [])
 
     if len(siD_list) != len(aeris_list):
         raise ValueError("Las listas SiD y Aeris no tienen el mismo número de elementos")
@@ -18,7 +17,7 @@ def process_json_and_call_sofi(data: dict) -> dict:
         motility_parameters = sid_item.get("motility_parameters", {})
         morphological_parameters = sid_item.get("morphological_parameters", {})
         #standardize_morph_parameters = sid_item.get("standardize_morph_parameters", {}).get("_StandardMorphologyParameters", {})
-        egg_features_parameters = aeris_item.get("egg_features", {})
+        egg_features_parameters = aeris_item.egg_features
         # Crear el diccionario de datos para la llamada al API
         request_data = {
             "body": {
@@ -69,8 +68,8 @@ def process_json_and_call_sofi(data: dict) -> dict:
         sofi_responses.append(response)
     return sofi_responses
 
-def call_sofi(data: dict) -> list:
-    sofi_responses = process_json_and_call_sofi(data)
+def call_sofi(sperms: List, eggs: List) -> list:
+    sofi_responses = process_json_and_call_sofi(sperms, eggs)
 
     return sofi_responses
 
