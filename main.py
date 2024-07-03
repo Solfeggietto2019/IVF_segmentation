@@ -146,18 +146,8 @@ def process(json_file_path: str, video_file_path: str) -> str:
     # Asegurar el cierre del archivo JSON
     ensure_file_closed(json_file_path)
 
-    ######### QUITAR DATA #################
-    try:
-        with open("data/json/test_final.json", "r") as file:
-            data = json.load(file)
-    except Exception as e:
-        print(f"Error al leer el archivo JSON: {e}")
-        data = None
-
-    json_data_u = json.dumps(data)
-
     # Retornar el contenido de la respuesta
-    return json_data_u
+    return json_output
 
 
 def ensure_file_closed(file_path: str):
