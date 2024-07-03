@@ -31,6 +31,7 @@ class JSONReader:
             return None
 
         sperms_data = defaultdict(list)
+        object_ID = self.data.get("objectId", "not_found")
 
         for idx, sperm_data in self.data.get("sperms", {}).items():
             positions = [
@@ -54,7 +55,7 @@ class JSONReader:
             )
             sperms_data[idx].append(sperm)
 
-        return sperms_data
+        return sperms_data, object_ID
 
     def extract_video_url(self) -> str:
         """

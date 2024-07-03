@@ -244,10 +244,10 @@ def make_response_json(sperm_info, egg_info, frame_number):
     return json_output
 
 
-def make_final_json(sperms, eggs, sofi_responses):
+def make_final_json(sperms, eggs, sofi_responses, object_id):
     version_control = VersionControl()
     data_structure = DataStructure(
-        objectID="0Wxootb0CP",
+        objectID=object_id,
         VersionControl=version_control,
         SiD=sperms,
         Aeris=eggs,

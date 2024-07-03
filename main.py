@@ -48,7 +48,7 @@ def process(json_file_path: str, video_file_path: str) -> str:
     frame_numbers = []
     egg_b64_frames = []
 
-    sperms_data = reader.extract_sperms_data()
+    sperms_data, object_id = reader.extract_sperms_data()
 
     if args.no_auto and args.ids:
         ids_list = [id.strip() for id in args.ids.split(",")]
@@ -139,7 +139,7 @@ def process(json_file_path: str, video_file_path: str) -> str:
     sofi_responses_content = [
         response.content.decode("utf-8") for response in sofi_responses
     ]
-    json_output, _ = make_final_json(sperms, eggs, sofi_responses_content)
+    json_output, _ = make_final_json(sperms, eggs, sofi_responses_content, object_id)
     filename = "test_final-56-manual.json"
     with open(filename, "w") as file:
         file.write(json_output)
