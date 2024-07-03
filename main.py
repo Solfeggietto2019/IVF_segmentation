@@ -27,6 +27,7 @@ def process(json_file_path: str, video_file_path: str) -> str:
 
     selected_sperm = SelectedSperm()
     reader = JSONReader(json_file_path)
+    reader.download_video(video_file_path)
     video_reader = VideoStreamReader(video_file_path)
     yolo = YOLOModel(MODEL_PATH)
 
