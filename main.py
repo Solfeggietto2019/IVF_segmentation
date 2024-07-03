@@ -136,18 +136,17 @@ def process(json_file_path: str, video_file_path: str) -> str:
     ]
     sperms = [sperm_object for sperm_object in selected_sperms]
     sofi_responses = call_sofi(sperms, eggs)
-    sofi_responses_content = [
-        response.content.decode("utf-8") for response in sofi_responses
-    ]
-    json_output, _ = make_final_json(sperms, eggs, sofi_responses_content, object_id)
+    sofi_responses_content = sofi_responses_content = [response.json() for response in sofi_responses]
+    json_output, json_dict = make_final_json(sperms, eggs, sofi_responses_content, object_id)
     filename = "test_final-56-manual.json"
+    json_string = json.dumps(json_dict, indent=4)
     with open(filename, "w") as file:
-        file.write(json_output)
+        file.write(json_string)
     # Asegurar el cierre del archivo JSON
     ensure_file_closed(json_file_path)
 
     # Retornar el contenido de la respuesta
-    return json_output
+    return json_string
 
 
 def ensure_file_closed(file_path: str):
