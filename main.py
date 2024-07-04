@@ -136,7 +136,7 @@ def process(json_file_path: str, video_file_path: str) -> str:
     ]
     sperms = [sperm_object for sperm_object in selected_sperms]
     sofi_responses = call_sofi(sperms, eggs)
-    sofi_responses_content = sofi_responses_content = [response.json() for response in sofi_responses]
+    sofi_responses_content = [response.json() for response in sofi_responses]
     json_output, json_dict = make_final_json(sperms, eggs, sofi_responses_content, object_id)
     filename = "test_final-56-manual.json"
     json_string = json.dumps(json_dict, indent=4)
