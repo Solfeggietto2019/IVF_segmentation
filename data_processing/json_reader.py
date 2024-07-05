@@ -35,7 +35,7 @@ class JSONReader:
 
         for idx, sperm_data in self.data.get("sperms", {}).items():
             positions = [
-                (pos["frame"], pos["_position"]["x"], pos["_position"]["y"])
+                (pos["frame"], pos["x"], pos["y"])
                 for pos in sperm_data["_positions"]
             ]
             initial_frame = positions[0][0] if positions else None
