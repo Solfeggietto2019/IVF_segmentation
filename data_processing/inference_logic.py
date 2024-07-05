@@ -7,19 +7,10 @@ from utils.utils import (
     get_morphological_features_from_mask,
     make_response_json,
 )
-from utils.dataclasses import SelectedSperm
+from utils.dataclasses import SelectedSperm, LogicStatus
 import time
 from api_calls.aeris import api_maturity, api_key, convert_image_to_base64
 from utils.standardize_metrics import standardize_sperm_metrics
-
-egg_class = 4
-pipette_class = 5
-pipette_detected_frame = -1
-cooldown_frames = 30
-fps = 30
-save_frame_delay = 3 * fps
-last_collision_frame = -cooldown_frames
-frame_saved = False
 
 
 def process_inference_results(
@@ -31,6 +22,7 @@ def process_inference_results(
     width: int,
     height: int,
     original_frame: np.ndarray,
+    logic_status: LogicStatus,
     bbox_size: int = 30,
 ) -> np.ndarray:
     """
@@ -42,7 +34,7 @@ def process_inference_results(
     :param height: The height of the video frame.
     :return: The annotated frame.
     """
-    global last_collision_frame, pipette_detected_frame, frame_saved
+    print(logic_status.last_collision_frame, logic_status.pipette_detected_frame, logic_status.frame_saved)
 
     if results[0].boxes is not None and results[0].masks is not None:
         boxes = results[0].boxes.xyxyn.cpu().numpy()
@@ -100,9 +92,9 @@ def process_inference_results(
             )
 
             for needle_bbox in needle_bboxes:
-                if is_bbox_overlaping(needle_bbox, sperm_bbox) and egg_class not in cls:
-                    if current_frame - last_collision_frame > cooldown_frames:
-                        frame_saved = False
+                if is_bbox_overlaping(needle_bbox, sperm_bbox) and logic_status.egg_class not in cls:
+                    if current_frame - logic_status.last_collision_frame > logic_status.cooldown_frames:
+                        logic_status.frame_saved = False
                         x_min, y_min, x_max, y_max = sperm_bbox
                         sperm_bbox_center_point = find_bbox_center(
                             x_min, y_min, x_max, y_max
@@ -127,7 +119,7 @@ def process_inference_results(
                             selected_sperm.sid_score = overlaping_sperm.SiDScore
                             selected_sperm.initial_frame = initial_sperm_frame
                             selected_sperm.b64_string_frame = sperm_b64_frame_image
-                        pipette_detected_frame = -1
+                        logic_status.pipette_detected_frame = -1
                         cv2.putText(
                             annotated_frame,
                             "Collision Detected",
@@ -144,7 +136,7 @@ def process_inference_results(
                             (0, 0, 255),
                             2,
                         )
-                        last_collision_frame = current_frame
+                        logic_status.last_collision_frame = current_frame
 
         elif class_id == 4:
             if selected_sperm and selected_sperm.Id is not None:
@@ -166,14 +158,14 @@ def process_inference_results(
                 selected_sperm.standardize_morph_parameters = (
                     standardize_morph_sperm_metrics
                 )
-                if pipette_class in cls:
-                    if pipette_detected_frame == -1:
-                        pipette_detected_frame = current_frame
-                        frame_saved = False
+                if logic_status.pipette_class in cls:
+                    if logic_status.pipette_detected_frame == -1:
+                        logic_status.pipette_detected_frame = current_frame
+                        logic_status.frame_saved = False
                     else:
                         if (
-                            current_frame - pipette_detected_frame > save_frame_delay
-                            and not frame_saved
+                            current_frame - logic_status.pipette_detected_frame > logic_status.save_frame_delay
+                            and not logic_status.frame_saved
                         ):
                             timestamp = int(time.time())
                             filename_egg = f"inyected_egg_{timestamp}.png"
@@ -184,7 +176,7 @@ def process_inference_results(
                                 print("Resultado del análisis:", response)
 
                             print(f"Frame guardado como {filename_egg}")
-                            frame_saved = True
+                            logic_status.frame_saved = True
                             selected_sperm = selected_sperm.to_serializable()
                             # response_json = make_response_json(selected_sperm, response, current_frame)
                             return (

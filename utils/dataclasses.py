@@ -3,6 +3,19 @@ from typing import List, Tuple, Dict, Any, Union
 import json
 import numpy as np
 
+class LogicStatus:
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.egg_class = 4
+        self.pipette_class = 5
+        self.pipette_detected_frame = -1
+        self.cooldown_frames = 30
+        self.fps = 30
+        self.save_frame_delay = 3 * self.fps
+        self.last_collision_frame = -self.cooldown_frames
+        self.frame_saved = False
 
 @dataclass
 class Sequence:

@@ -19,7 +19,7 @@ class VideoStreamReader:
             height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             fps = int(self.cap.get(cv2.CAP_PROP_FPS))
             num_frame = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
-            print(f"STARTING NUM FRAME", {num_frame})
+            print(f"STARTING NUM FRAME: ", {num_frame})
             if not ret:
                 break
             yield frame, width, height, fps, num_frame
