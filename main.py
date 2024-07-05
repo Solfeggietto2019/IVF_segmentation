@@ -10,7 +10,7 @@ from utils.utils import (
     make_final_json,
     get_manual_selected_sperms,
 )
-from utils.dataclasses import SelectedSperm, Egg
+from utils.dataclasses import SelectedSperm, Egg, LogicStatus
 from api_calls.sofi import call_sofi
 import json
 import argparse
@@ -30,6 +30,7 @@ def process(json_file_path: str, video_file_path: str) -> str:
     reader.download_video(video_file_path)
     video_reader = VideoStreamReader(video_file_path)
     yolo = YOLOModel(MODEL_PATH)
+    collision_status = LogicStatus()
 
     parser = argparse.ArgumentParser(description="Process some sperm data.")
     parser.add_argument(
@@ -103,6 +104,7 @@ def process(json_file_path: str, video_file_path: str) -> str:
                         width,
                         height,
                         original_frame,
+                        collision_status,
                     )
                 )
             cv2.imshow("YOLOv8 Tracking", annotated_frame)
