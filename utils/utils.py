@@ -8,7 +8,7 @@ import requests
 
 
 def adjust_coordinates(
-    x: int, y: int, frame_shape: tuple, dim: int = 10, scale_width: int = 640
+    x: int, y: int, frame_shape: tuple, dim: int = 0, reference_width: int = 640, reference_height: int = 480
 ) -> tuple:
     """
     Adjust the coordinates (x, y) based on the frame dimensions and scaling factor.
@@ -18,16 +18,18 @@ def adjust_coordinates(
     - y (int): The original y-coordinate.
     - frame_shape (tuple): The shape of the frame as (height, width, channels).
     - dim (int, optional): The dimension to adjust the coordinates by. Default is 10.
-    - scale_width (int, optional): The width to scale the coordinates by. Default is 640.
+    - reference_width (int, optional): The reference width to scale the coordinates by. Default is 640.
+    - reference_height (int, optional): The reference height to scale the coordinates by. Default is 480.
 
     Returns:
     - tuple: Adjusted (x, y) coordinates.
     """
     frame_height, frame_width, _ = frame_shape
-    scaling_factor = frame_width / scale_width
+    scaling_factor_width = frame_width / reference_width
+    scaling_factor_height = frame_height / reference_height
 
-    x = round(x * scaling_factor)
-    y = round(y * scaling_factor)
+    x = round(x * scaling_factor_width)
+    y = round(y * scaling_factor_height)
 
     if x + dim > frame_width:
         x = frame_width - dim
@@ -39,7 +41,6 @@ def adjust_coordinates(
         y = dim
 
     return x, y
-
 
 def draw_positions(
     frame: np.ndarray, positions: Tuple[int, int], sperm_id: int

@@ -16,7 +16,6 @@ import json
 import argparse
 import os
 
-
 MODEL_PATH = "models/best.pt"
 
 
@@ -48,9 +47,7 @@ def process(json_file_path: str, video_file_path: str) -> str:
     egg_responses = []
     frame_numbers = []
     egg_b64_frames = []
-
     sperms_data, object_id = reader.extract_sperms_data()
-
     if args.no_auto and args.ids:
         ids_list = [id.strip() for id in args.ids.split(",")]
         print(f"Selected Id's: {ids_list}")
@@ -69,7 +66,7 @@ def process(json_file_path: str, video_file_path: str) -> str:
                         if 0 <= position_idx < len(sperm.positions):
                             frame_number, x, y = sperm.positions[position_idx]
                             x_adjusted, y_adjusted = adjust_coordinates(
-                                x, y, frame.shape
+                                x, y, frame.shape, reference_width=width, reference_height=height
                             )
                             sperm.positions[position_idx] = (
                                 frame_number,
