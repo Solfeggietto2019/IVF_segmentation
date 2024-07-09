@@ -34,7 +34,6 @@ def process_inference_results(
     :param height: The height of the video frame.
     :return: The annotated frame.
     """
-    print(logic_status.last_collision_frame, logic_status.pipette_detected_frame, logic_status.frame_saved)
 
     if results[0].boxes is not None and results[0].masks is not None:
         boxes = results[0].boxes.xyxyn.cpu().numpy()
@@ -53,6 +52,7 @@ def process_inference_results(
         x_min, y_min, x_max, y_max = box
         text_position = (int(x_min * width), int(y_min * height))
         mask_height, mask_width = mask.shape
+        
         if class_id == 1:
             label = f"Needle, Conf: {confidence:.2f}"
             cv2.putText(
@@ -65,12 +65,26 @@ def process_inference_results(
                 1,
             )
 
+            points = np.column_stack(np.where(mask > 0))
+            
+            if len(points) == 0:
+                continue
+            
+            leftmost_point = points[np.argmin(points[:, 1])]
+            rightmost_point = points[np.argmax(points[:, 1])]
+            
+            if leftmost_point[1] > rightmost_point[1]: 
+                needle_tip = rightmost_point
+            else: 
+                needle_tip = leftmost_point
+            
             needle_bbox = (
-                int(x_min * width) - 5,
-                int(y_min * height) - 5,
-                int(x_min * width) + bbox_size,
-                int(y_min * height) + bbox_size,
+                int(needle_tip[1] * width / mask_width) - 5,
+                int(needle_tip[0] * height / mask_height) - 5,
+                int(needle_tip[1] * width / mask_width) + bbox_size,
+                int(needle_tip[0] * height / mask_height) + bbox_size,
             )
+            
             needle_bboxes.append(needle_bbox)
             cv2.rectangle(
                 annotated_frame,
