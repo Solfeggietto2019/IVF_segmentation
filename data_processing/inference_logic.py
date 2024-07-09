@@ -73,7 +73,7 @@ def process_inference_results(
             leftmost_point = points[np.argmin(points[:, 1])]
             rightmost_point = points[np.argmax(points[:, 1])]
             
-            if leftmost_point[1] > rightmost_point[1]: 
+            if leftmost_point[1] < 50: 
                 needle_tip = rightmost_point
             else: 
                 needle_tip = leftmost_point
