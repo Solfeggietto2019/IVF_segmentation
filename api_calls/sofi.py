@@ -18,8 +18,8 @@ def process_json_and_call_sofi(siD_list, aeris_list) -> dict:
             continue
         # Extraer los datos necesarios de sid_item
         motility_parameters = sid_item.get("motility_parameters", {})
-        morphological_parameters = sid_item.get("morphological_parameters", {})
-        # standardize_morph_parameters = sid_item.get("standardize_morph_parameters", {}).get("_StandardMorphologyParameters", {})
+        #morphological_parameters = sid_item.get("standardize_morph_parameters", {})
+        standardize_morph_parameters = sid_item.get("standardize_morph_parameters", {}).get("_StandardMorphologyParameters", {})
         egg_features_parameters = aeris_item.egg_features
         # Crear el diccionario de datos para la llamada al API
         request_data = {
@@ -78,22 +78,22 @@ def process_json_and_call_sofi(siD_list, aeris_list) -> dict:
                 "zp_peri_cyto_area": egg_features_parameters.get(
                     "zp_peri_cyto_area", 0
                 ),
-                "area": morphological_parameters.get("area", 0),
-                "perimeter": morphological_parameters.get("perimeter", 0),
-                "aspect_ratio": morphological_parameters.get("aspect_ratio", 0),
-                "extend": morphological_parameters.get("extend", 0),
-                "orientated_angle": morphological_parameters.get("orientated_angle", 0),
-                "circularity": morphological_parameters.get("circularity", 0),
-                "hull_area": morphological_parameters.get("hull_area", 0),
-                "solidity": morphological_parameters.get("solidity", 0),
-                "hull_perimeter": morphological_parameters.get("hull_perimeter", 0),
-                "convexity": morphological_parameters.get("convexity", 0),
-                "eccentricity": morphological_parameters.get("eccentricity", 0),
-                "compactness": morphological_parameters.get("compactness", 0),
-                "major_axis_radius": morphological_parameters.get(
+                "area": standardize_morph_parameters.get("area", 0),
+                "perimeter": standardize_morph_parameters.get("perimeter", 0),
+                "aspect_ratio": standardize_morph_parameters.get("aspect_ratio", 0),
+                "extend": standardize_morph_parameters.get("extend", 0),
+                "orientated_angle": standardize_morph_parameters.get("orientated_angle", 0),
+                "circularity": standardize_morph_parameters.get("circularity", 0),
+                "hull_area": standardize_morph_parameters.get("hull_area", 0),
+                "solidity": standardize_morph_parameters.get("solidity", 0),
+                "hull_perimeter": standardize_morph_parameters.get("hull_perimeter", 0),
+                "convexity": standardize_morph_parameters.get("convexity", 0),
+                "eccentricity": standardize_morph_parameters.get("eccentricity", 0),
+                "compactness": standardize_morph_parameters.get("compactness", 0),
+                "major_axis_radius": standardize_morph_parameters.get(
                     "major_axis_radius", 0
                 ),
-                "minor_axis_radius": morphological_parameters.get(
+                "minor_axis_radius": standardize_morph_parameters.get(
                     "minor_axis_radius", 0
                 ),
             },
