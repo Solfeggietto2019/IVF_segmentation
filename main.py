@@ -4,6 +4,7 @@ from data_processing.stream_reader import VideoStreamReader
 from data_processing.yolo_model import YOLOModel
 from data_processing.inference_logic import process_inference_results
 from data_processing.manual_processing import process_inference_results_manually
+from typing import List, Optional
 from utils.utils import (
     draw_positions,
     adjust_coordinates,
@@ -19,11 +20,12 @@ import os
 MODEL_PATH = "models/best.pt"
 
 
-def process(json_file_path: str, video_file_path: str) -> str:
-    # json_file_path = "data/json/IsaacVideoTest3_2024-06-25-22-56-Camera.json"
-    # video_file_path = "data/video/IsaacVideoTest3_2024-06-25-22-56-Camera.mp4"
-    # model_path = "models/best.pt"
-
+def process(
+    json_file_path: str,
+    video_file_path: str,
+    ids: List[int] = [],
+    no_auto: Optional[bool] = False,
+) -> str:
     selected_sperm = SelectedSperm()
     reader = JSONReader(json_file_path)
     reader.download_video(video_file_path)
@@ -31,25 +33,13 @@ def process(json_file_path: str, video_file_path: str) -> str:
     yolo = YOLOModel(MODEL_PATH)
     collision_status = LogicStatus()
 
-    parser = argparse.ArgumentParser(description="Process some sperm data.")
-    parser.add_argument(
-        "--no-auto", action="store_true", help="Disable automatic processing."
-    )
-    parser.add_argument(
-        "--ids",
-        type=str,
-        help="List of ID's separated by commas in injection order (e.g.: 1,2,3).",
-    )
-
-    args = parser.parse_args()
-
     selected_sperms = []
     egg_responses = []
     frame_numbers = []
     egg_b64_frames = []
     sperms_data, object_id = reader.extract_sperms_data()
-    if args.no_auto and args.ids:
-        ids_list = [id.strip() for id in args.ids.split(",")]
+    if no_auto and ids:
+        ids_list = ids
         print(f"Selected Id's: {ids_list}")
         manual_selected_sperms = get_manual_selected_sperms(sperms_data, ids_list)
     try:
@@ -66,7 +56,11 @@ def process(json_file_path: str, video_file_path: str) -> str:
                         if 0 <= position_idx < len(sperm.positions):
                             frame_number, x, y = sperm.positions[position_idx]
                             x_adjusted, y_adjusted = adjust_coordinates(
-                                x, y, frame.shape, reference_width=width, reference_height=height
+                                x,
+                                y,
+                                frame.shape,
+                                reference_width=width,
+                                reference_height=height,
                             )
                             sperm.positions[position_idx] = (
                                 frame_number,
@@ -77,7 +71,7 @@ def process(json_file_path: str, video_file_path: str) -> str:
                                 frame, (x_adjusted, y_adjusted), sperm.id
                             )
 
-            if args.no_auto and args.ids:
+            if no_auto and ids:
                 annotated_frame, sperm_object, egg_object, selected_frame, egg_b64 = (
                     process_inference_results_manually(
                         selected_sperm,
@@ -138,7 +132,9 @@ def process(json_file_path: str, video_file_path: str) -> str:
     sperms = [sperm_object for sperm_object in selected_sperms]
     sofi_responses = call_sofi(sperms, eggs)
     sofi_responses_content = [response.json() for response in sofi_responses]
-    json_output, json_dict = make_final_json(sperms, eggs, sofi_responses_content, object_id)
+    json_output, json_dict = make_final_json(
+        sperms, eggs, sofi_responses_content, object_id
+    )
     filename = "test_final-56-manual.json"
     json_string = json.dumps(json_dict, indent=4)
     with open(filename, "w") as file:

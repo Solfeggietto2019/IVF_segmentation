@@ -1,4 +1,13 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Header, Depends, BackgroundTasks
+from fastapi import (
+    FastAPI,
+    UploadFile,
+    File,
+    HTTPException,
+    Header,
+    Depends,
+    BackgroundTasks,
+    Form,
+)
 from pydantic import BaseModel
 from typing import List, Optional
 import shutil
@@ -34,13 +43,19 @@ def get_api_key(api_key: Optional[str] = Header(None)):
     return api_key
 
 
-def process_and_cleanup(task_id: str, json_file_path: str, video_file_path: str):
+def process_and_cleanup(
+    task_id: str,
+    json_file_path: str,
+    video_file_path: str,
+    ids: List[int] = [],
+    no_auto: Optional[bool] = False,
+):
     global is_busy
     is_busy = True
 
     try:
         # Llamar a la función de procesamiento
-        json_output = process(json_file_path, video_file_path)
+        json_output = process(json_file_path, video_file_path, ids, no_auto)
 
         # Realizar limpieza de archivos después de enviar la respuesta
         clean_up_files(json_file_path, video_file_path)
@@ -66,7 +81,11 @@ async def return_busy():
 
 @app.post("/process", response_model=MessageResponse)
 async def process_video(
-        background_tasks: BackgroundTasks, json_file: UploadFile = File(...), api_key: str = Depends(get_api_key)
+    background_tasks: BackgroundTasks,
+    ids_for_manual_processing: Optional[str] = Form(None),
+    manual_processing: bool = Form(...),
+    json_file: UploadFile = File(...),
+    api_key: str = Depends(get_api_key),
 ):
     # Guardar el archivo JSON recibido
     json_file_path = f"data/json/{json_file.filename}"
@@ -79,14 +98,27 @@ async def process_video(
     # Generar un task_id único
     task_id = str(uuid4())
 
+    # Manejar el parámetro 'ids' y 'no_auto'
+    # ids = ids_for_manual_processing
+    if ids_for_manual_processing:
+        ids = list(map(int, ids_for_manual_processing.split(",")))
+    else:
+        ids = []
+    no_auto = manual_processing
+
     # Añadir la tarea de fondo para procesar y limpiar archivos
-    background_tasks.add_task(process_and_cleanup, task_id, json_file_path, video_file_path)
+    background_tasks.add_task(
+        process_and_cleanup, task_id, json_file_path, video_file_path, ids, no_auto
+    )
 
     # Inicializar el estado de la tarea
     tasks[task_id] = {"status": "processing", "json_output": None}
 
     # Responder inmediatamente con un estado 200
-    return {"message": "File received successfully, processing started.", "task_id": task_id}
+    return {
+        "message": "File received successfully, processing started.",
+        "task_id": task_id,
+    }
 
 
 @app.get("/tasks/{task_id}", response_model=TaskResult)
