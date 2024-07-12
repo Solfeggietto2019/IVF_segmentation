@@ -81,6 +81,7 @@ class Egg:
     mask: Any
     egg_features: Any
     b64_string_frame: str = None  # Mandar
+    score: float = None
 
 
 @dataclass

@@ -125,6 +125,8 @@ def process(json_file_path: str, video_file_path: str) -> str:
                 response["oocytes"][0]["masks"],
                 response["oocytes"][0]["features"],
                 egg_b64,
+                round(response["oocytes"][0]["blasto_probability"], 4)
+
             )
             if response["oocytes"]
             else None
@@ -171,9 +173,3 @@ def clean_up_files(json_file_path: str, video_file_path: str):
             os.remove(video_file_path)
         except Exception as e:
             print(f"Error al eliminar el archivo de video: {e}")
-
-
-if __name__ == "__main__":
-    json_file_path = "EX7qNnqXV6-59476_2024-07-08-07-21-Camera.json"
-    video_file_path = "data/test.mp4"
-    process(json_file_path, video_file_path)
