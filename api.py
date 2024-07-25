@@ -8,6 +8,7 @@ from fastapi import (
     BackgroundTasks,
     Form,
 )
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 import shutil
@@ -20,6 +21,14 @@ is_busy = False
 tasks = {}
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Define your API Key aquí (por simplicidad, hardcoded; usa variables de entorno en producción)
 API_KEY = "f3c2e8d6b4a1d4e7c8a9b2d6e7f8c3a1b2d4e7c8a9b2d6f3c2e8d7b4a1c3d4"
