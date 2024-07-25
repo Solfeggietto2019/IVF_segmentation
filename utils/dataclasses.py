@@ -16,6 +16,9 @@ class LogicStatus:
         self.save_frame_delay = 3 * self.fps
         self.last_collision_frame = -self.cooldown_frames
         self.frame_saved = False
+        self.paused = False
+        self.show_options = False
+        self.manually_egg_frame_saved = False
 
 @dataclass
 class Sequence:

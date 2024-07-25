@@ -8,19 +8,11 @@ from utils.utils import (
     make_response_json,
     calculate_distance,
 )
-from utils.dataclasses import SelectedSperm
+from utils.dataclasses import SelectedSperm, LogicStatus
 import time
 from api_calls.aeris import api_maturity, api_key, convert_image_to_base64
 from utils.standardize_metrics import standardize_sperm_metrics
 
-egg_class = 4
-pipette_class = 5
-pipette_detected_frame = -1
-cooldown_frames = 30
-fps = 30
-save_frame_delay = 3 * fps
-last_collision_frame = -cooldown_frames
-frame_saved = False
 
 
 def process_inference_results_manually(
@@ -31,6 +23,7 @@ def process_inference_results_manually(
     width: int,
     height: int,
     original_frame: np.ndarray,
+    logic_status: LogicStatus,
     bbox_size: int = 30,
 ) -> np.ndarray:
     """
@@ -42,7 +35,6 @@ def process_inference_results_manually(
     :param height: The height of the video frame.
     :return: The annotated frame.
     """
-    global last_collision_frame, pipette_detected_frame, frame_saved
 
     if results[0].boxes is not None and results[0].masks is not None:
         boxes = results[0].boxes.xyxyn.cpu().numpy()
@@ -93,8 +85,48 @@ def process_inference_results_manually(
                             selected_sperm.sid_score = sperm.SiDScore
                             selected_sperm.initial_frame = sperm.initial_frame
                             selected_sperm.b64_string_frame = sperm_b64_frame_image
-                            pipette_detected_frame = -1
+                            logic_status.pipette_detected_frame = -1
+                            logic_status.frame_saved = False
+                            logic_status.manually_egg_frame_saved = False
         if class_id == 4:
+            if not logic_status.paused:
+                cv2.putText(
+                    annotated_frame,
+                    "Press 'p' to Pause",
+                    (50, 100),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.8,
+                    (0, 255, 255),
+                    2,
+                )
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('p') and not logic_status.paused:
+                logic_status.paused = True
+                logic_status.show_options = True
+                cv2.putText(
+                    annotated_frame,
+                    "Press 'r' to Resume or 's' to Send Frame",
+                    (50, 120),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.8,
+                    (0, 255, 255),
+                    2,
+                )
+                return annotated_frame, None, None, None, None
+            while logic_status.paused:
+                key = cv2.waitKey(1) & 0xFF
+                if key == ord('r'):
+                    logic_status.paused = False
+                    logic_status.show_options = False
+                if key == ord('s'):
+                    timestamp = int(time.time())
+                    filename_egg = f"inyected_egg_{timestamp}.png"
+                    cv2.imwrite(filename_egg, original_frame)
+                    egg_b64_frame_image = convert_image_to_base64(filename_egg)
+                    response = api_maturity(filename_egg, api_key)
+                    logic_status.manually_egg_frame_saved = True
+                    print("Frame send manually, response recieved")
+                
             if selected_sperm and selected_sperm.Id is not None:
                 print(f"Track ID of the selected sperm: {selected_sperm.Id}")
                 sperm_morph_info = get_morphological_features_from_mask(selected_sperm)
@@ -114,25 +146,26 @@ def process_inference_results_manually(
                 selected_sperm.standardize_morph_parameters = (
                     standardize_morph_sperm_metrics
                 )
-                if pipette_class in cls:
-                    if pipette_detected_frame == -1:
-                        pipette_detected_frame = current_frame
-                        frame_saved = False
+                if logic_status.pipette_class in cls:
+                    if logic_status.pipette_detected_frame == -1:
+                        logic_status.pipette_detected_frame = current_frame
+                        logic_status.frame_saved = False
                     else:
                         if (
-                            current_frame - pipette_detected_frame > save_frame_delay
-                            and not frame_saved
+                            current_frame - logic_status.pipette_detected_frame > logic_status.save_frame_delay
+                            and not logic_status.frame_saved
                         ):
-                            timestamp = int(time.time())
-                            filename_egg = f"inyected_egg_{timestamp}.png"
-                            cv2.imwrite(filename_egg, original_frame)
-                            egg_b64_frame_image = convert_image_to_base64(filename_egg)
-                            response = api_maturity(filename_egg, api_key)
+                            if not logic_status.manually_egg_frame_saved:
+                                timestamp = int(time.time())
+                                filename_egg = f"inyected_egg_{timestamp}.png"
+                                cv2.imwrite(filename_egg, original_frame)
+                                egg_b64_frame_image = convert_image_to_base64(filename_egg)
+                                response = api_maturity(filename_egg, api_key)
                             if response:
                                 print("Resultado del análisis:", response)
 
                             print(f"Frame guardado como {filename_egg}")
-                            frame_saved = True
+                            logic_status.frame_saved = True
                             selected_sperm = selected_sperm.to_serializable()
                             return (
                                 annotated_frame,
