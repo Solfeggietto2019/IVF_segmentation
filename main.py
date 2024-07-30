@@ -171,3 +171,9 @@ def clean_up_files(json_file_path: str, video_file_path: str):
         except Exception as e:
             print(f"Error al eliminar el archivo de video: {e}")
 
+if __name__ == "__main__":
+    json_file_path = "data/bug/test.json"
+    video_file_path = "data/bug/test.mp4"
+    id_list = [462, 482]
+    no_auto = True
+    process(json_file_path, video_file_path, id_list, no_auto)
