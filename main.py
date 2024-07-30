@@ -81,6 +81,7 @@ def process(
                         width,
                         height,
                         original_frame,
+                        collision_status
                     )
                 )
 
@@ -169,3 +170,4 @@ def clean_up_files(json_file_path: str, video_file_path: str):
             os.remove(video_file_path)
         except Exception as e:
             print(f"Error al eliminar el archivo de video: {e}")
+
